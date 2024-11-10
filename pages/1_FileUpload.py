@@ -1,6 +1,7 @@
 import streamlit as st
 import PyPDF2
 from io import BytesIO
+from src.process_statement import process_text
 
 
 st.title("File Upload")
@@ -38,8 +39,6 @@ def pdf_to_text(uploaded_file):
         st.error(f"Unexpected error: {str(e)}")
         return None
 
-def process_text(uploaded_text:str, filename:str):
-    st.success(f"Finished processing {filename}")
 
 
 #

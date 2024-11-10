@@ -1,3 +1,11 @@
 streamlit
 
 PyPDF2
+
+pydantic
+
+langchain-community
+langchain-core
+langgraph
+langchain-openai
+
