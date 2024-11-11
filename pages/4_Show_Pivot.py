@@ -5,8 +5,6 @@ import streamlit as st
 from datetime import datetime
 import pandas as pd
 
-from src.process_statement import process_one_charging_entity
-
 def work_with_file(filepath):
     st.write(f"Working with file {filepath}")
     df=pd.read_csv(filepath)
@@ -17,27 +15,12 @@ def work_with_file(filepath):
     if 'Category' not in df.columns:
         df['Category']='Unknown'
     df['Amount'] = pd.to_numeric(df['Amount'].astype(str).str.replace(',', ''), errors='coerce')
-    df = df.loc[:, ~df.columns.str.startswith('Unnamed')]
-    filtered_df = df[df["Merchant"] == "Unknown"]
-    print(f"Filtered count is {filtered_df.shape[0]}")
-    with st.expander("Filtered"):
-        st.dataframe(filtered_df)
-    random_row = filtered_df.sample(n=1) if not filtered_df.empty else None
+    pivot_table1 = pd.pivot_table(df, values='Amount', index='Category', aggfunc='sum')
+    st.divider()
+    st.dataframe(pivot_table1)
 
-# Display the random row
-    if random_row is not None:
-        entity=random_row.iloc[0]['ChargedBy']
-        print(entity)
-        merchant,category=process_one_charging_entity(entity)
-        random_row.at[random_row.index[0], 'Merchant']=merchant
-        random_row.at[random_row.index[0], 'Category']=category
-        st.write(f"Entity={entity} merchant={merchant},category={category}")
-        df.loc[random_row.index[0]] = random_row.iloc[0]
-        #st.dataframe(df)
-        df.to_csv(filepath,index=False)
-    else:
-        print("No matching rows found.")
-
+    pivot_table2 = pd.pivot_table(df, values='Amount', index=['Category', 'Merchant'], aggfunc='sum')
+    st.dataframe(pivot_table2)
 
 def pick_file(directory_path):
     file_details = []
@@ -62,13 +45,11 @@ def pick_file(directory_path):
             chosen_file_name = file_display[selected_file]
             st.write(f"You selected: {chosen_file_name}")
             chosen_file_path = os.path.join(directory_path, chosen_file_name)
-            record_count=st.number_input("How many records",value=10)
-            if st.button("Process records"):
-                for i in range(record_count):
-                    work_with_file(chosen_file_path)
+            work_with_file(chosen_file_path)
 
     else:
         st.write("No files found in the directory.")
 
 
 pick_file('datafiles')
+
