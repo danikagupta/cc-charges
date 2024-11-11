@@ -3,6 +3,9 @@ import PyPDF2
 from io import BytesIO
 from src.process_statement import process_text
 
+import pandas as pd
+import re 
+
 
 st.title("File Upload")
 
@@ -39,7 +42,24 @@ def pdf_to_text(uploaded_file):
         st.error(f"Unexpected error: {str(e)}")
         return None
 
+def process_text_direct(text_content,filename):
+    pattern = r'^\d{2}/\d{2}'
 
+    full_list=[]
+    for i,li in enumerate(text_content):
+        li = li.strip()
+        if re.match(pattern,li):
+            split_result = li.split(' ', 1)  # Split once at the first space to separate the date
+            split_result.extend(split_result.pop().rsplit(' ', 1))
+            if len(split_result)==3:
+                print(f"I={i},LI={li},SR={split_result}")
+                full_list.append({"Date":split_result[0],"ChargedBy":split_result[1],"Amount":split_result[2]})
+            else:
+                print(f"{i}, DATE ONLY FOR {li}, split result len = {len(split_result)}")
+        else:
+            print(f"{i}, NO MATCH FOR {li}")
+    df=pd.DataFrame(full_list)
+    df.to_csv('datafiles/'+filename.replace('.txt','-direct.csv'),index=False)
 
 #
 # Direcly access Text Input    
@@ -68,3 +88,17 @@ if uploaded_file is not None:
         with st.sidebar.expander("File contents"):
             st.write(file_text)
         process_text(file_text,uploaded_file.name)
+
+#
+# Accept a Text file using Streamlit
+#
+st.markdown("# Upload file DIRECT CODE: Text")
+uploaded_file=st.file_uploader("Upload DIRECT file",type="txt")
+if uploaded_file is not None:
+    if st.button('Process DIRECT File'):
+        filecontent=[]
+        for line in uploaded_file:
+            filecontent.append(line.decode('utf-8').strip())
+        with st.sidebar.expander("File contents"):
+            st.write(filecontent)
+        process_text_direct(filecontent,uploaded_file.name)

@@ -4,9 +4,11 @@ import os
 
 from langchain_openai import ChatOpenAI
 
+import pandas as pd
+
 from langchain_core.messages import SystemMessage, HumanMessage
 from datetime import date
-from typing import List,Tuple
+from typing import List,Tuple,Literal
 from enum import Enum
 from pydantic import BaseModel
 
@@ -15,14 +17,14 @@ os.environ["LANGCHAIN_API_KEY"]=st.secrets['LANGCHAIN_API_KEY']
 os.environ["LANGCHAIN_PROJECT"]="CC_CHARGES"
 os.environ['LANGCHAIN_ENDPOINT']="https://api.smith.langchain.com"
 
-Category = Enum('Category', 'Entertainment Food Education Other')
+#Category = Enum('Category', 'Entertainment Food Education Other')
 
 class OneCharge(BaseModel):
     transactionDate: date
     chargeStatement: str
     chargedAmount: float
     merchant: str
-    category: Category
+    category: Literal["Entertainment", "Food", "Education", "Other"]
     
 
 class ChargeList(BaseModel):
@@ -41,9 +43,12 @@ def process_text(uploaded_text:str, filename:str):
 
     msgs=[SystemMessage(content=SYSTEM_PROMPT),HumanMessage(content=uploaded_text)]
     llm_response=model.with_structured_output(ChargeList).invoke(msgs)
+    charges_dicts = [charge.dict() for charge in llm_response.charges]
+    df = pd.DataFrame(charges_dicts)
+    csv_filename='datafiles/'+filename.replace('.txt','.csv')
+    df.to_csv(csv_filename,index=False)
     with st.expander("Model response"):
-        st.write(f"LLM Response: {llm_response}")
-        st.dataframe(llm_response)
+        st.dataframe(df)
     st.success(f"SRC Finished processing {filename}")
 
 
