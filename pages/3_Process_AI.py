@@ -7,7 +7,7 @@ import pandas as pd
 
 from src.process_statement import process_one_charging_entity
 
-def work_with_file(filepath):
+def work_with_file(filepath,cols):
     st.write(f"Working with file {filepath}")
     df=pd.read_csv(filepath)
     if 'Use' not in df.columns:
@@ -22,17 +22,17 @@ def work_with_file(filepath):
     print(f"Filtered count is {filtered_df.shape[0]}")
     with st.expander("Filtered"):
         st.dataframe(filtered_df)
-    random_row = filtered_df.sample(n=1) if not filtered_df.empty else None
+    random_rows = filtered_df.sample(n=cols) if not filtered_df.empty else None
 
 # Display the random row
-    if random_row is not None:
-        entity=random_row.iloc[0]['ChargedBy']
+    for i in range(len(random_rows)):
+        entity=random_rows.iloc[i]['ChargedBy']
         print(entity)
         merchant,category=process_one_charging_entity(entity)
-        random_row.at[random_row.index[0], 'Merchant']=merchant
-        random_row.at[random_row.index[0], 'Category']=category
+        random_rows.at[random_rows.index[i], 'Merchant']=merchant
+        random_rows.at[random_rows.index[i], 'Category']=category
         st.write(f"Entity={entity} merchant={merchant},category={category}")
-        df.loc[random_row.index[0]] = random_row.iloc[0]
+        df.loc[random_rows.index[i]] = random_rows.iloc[i]
         #st.dataframe(df)
         df.to_csv(filepath,index=False)
     else:
@@ -62,10 +62,11 @@ def pick_file(directory_path):
             chosen_file_name = file_display[selected_file]
             st.write(f"You selected: {chosen_file_name}")
             chosen_file_path = os.path.join(directory_path, chosen_file_name)
-            record_count=st.number_input("How many records",value=10)
+            rows=st.number_input("How many rows",value=1)
+            cols=st.number_input("How many cols",value=1)
             if st.button("Process records"):
-                for i in range(record_count):
-                    work_with_file(chosen_file_path)
+                for i in range(rows):
+                    work_with_file(chosen_file_path,cols)
 
     else:
         st.write("No files found in the directory.")

@@ -61,6 +61,7 @@ def process_text_direct(text_content,filename):
     df=pd.DataFrame(full_list)
     df.to_csv('datafiles/'+filename.replace('.txt','-direct.csv'),index=False)
 
+leave_out="""
 #
 # Direcly access Text Input    
 #
@@ -88,6 +89,7 @@ if uploaded_file is not None:
         with st.sidebar.expander("File contents"):
             st.write(file_text)
         process_text(file_text,uploaded_file.name)
+"""
 
 #
 # Accept a Text file using Streamlit

@@ -15,12 +15,21 @@ def work_with_file(filepath):
     if 'Category' not in df.columns:
         df['Category']='Unknown'
     df['Amount'] = pd.to_numeric(df['Amount'].astype(str).str.replace(',', ''), errors='coerce')
+    with st.expander("Raw data"):
+        st.dataframe(df)
     pivot_table1 = pd.pivot_table(df, values='Amount', index='Category', aggfunc='sum')
     st.divider()
-    st.dataframe(pivot_table1)
+    with st.expander("Categories"):
+        st.dataframe(pivot_table1)
 
     pivot_table2 = pd.pivot_table(df, values='Amount', index=['Category', 'Merchant'], aggfunc='sum')
-    st.dataframe(pivot_table2)
+    with st.expander("Categories and Merchants"):
+        st.dataframe(pivot_table2)
+    st.divider()
+    if st.button("Reset this file"):
+        df=df.drop(columns=['Merchant','Category'])
+        df.to_csv(filepath,index=False)
+        st.success(f"Completed reset for {filepath}")
 
 def pick_file(directory_path):
     file_details = []
